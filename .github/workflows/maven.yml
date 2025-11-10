@@ -7,11 +7,19 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+    schedule:
+      -  cron: 00 18 * * *
+      -  cron: 00 3 * * *
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        checks: write
+        issues: write
+        
 
     steps:
     - uses: actions/checkout@v4
@@ -22,6 +30,24 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Execute Tests
-      run: mvn clean test -Dsuite=suite
+      run: mvn clean test -Dsuite=suite -X
+
+    - name: Upload a build Artifact
+      if: alwys()
+      uses: actions/upload-artifact@v4.4.3
+      with:
+      name: Logs
+      path: logs/
+
+    - name: Publish test Reports
+      if: always()
+      uses: dorny/test-reporter@v1
+      with:
+        name: TestNG results
+        path: target/surefire-reports/junitreports/TEST-*xml
+        reporter: java-junit
+      
+
+    
 
     
